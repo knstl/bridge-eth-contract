@@ -1,31 +1,26 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.6.0 <0.9.0;
+pragma solidity ^0.8.0;
 pragma abicoder v2;
 
 import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 import "@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol";
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "../interface/IERC20withBurn.sol";
-    //     swaprouter    -> 0xE592427A0AEce92De3Edee1F18E0157C05861564
-    //      WETH         -> 0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6
-    //     WDARC         -> 0xFbAf1f87EfAdF0fb2f591C6D88404A1B673604De
-    //      USDC(UNI)    -> 0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984
-
+import "../interface/IWDARC.sol";
+import "../interface/IWETH9.sol";
 
 contract SwapHandler is Ownable {
     ISwapRouter public immutable swapRouter;
     IWETH9 public immutable WETH9; 
     uint24 public constant poolFee = 3000;
-    IERC20withBurn public immutable WDARC;
+    IWDARC public immutable WDARC;
     address public immutable USDC;
     mapping(string => address) public tokenContractAddress;
 
     constructor(
         ISwapRouter _swapRouter,
         IWETH9 _IWETH9,
-        IERC20withBurn _WDARC,
+        IWDARC _WDARC,
         address _USDC
     ) {
         WETH9 = _IWETH9;
