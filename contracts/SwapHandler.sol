@@ -4,26 +4,25 @@ pragma abicoder v2;
 
 import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 import "@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol";
-
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "../interface/IWDARC.sol";
-import "../interface/IWETH9.sol";
+import "../interface/IWETH.sol";
 
 contract SwapHandler is Ownable {
     ISwapRouter public immutable swapRouter;
-    IWETH9 public immutable WETH9; 
-    uint24 public constant poolFee = 3000;
+    IWETH public immutable WETH; 
     IWDARC public immutable WDARC;
+    uint24 public constant poolFee = 3000;
     address public immutable USDC;
     mapping(string => address) public tokenContractAddress;
 
     constructor(
         ISwapRouter _swapRouter,
-        IWETH9 _IWETH9,
+        IWETH _IWETH,
         IWDARC _WDARC,
         address _USDC
     ) {
-        WETH9 = _IWETH9;
+        WETH = _IWETH;
         swapRouter = _swapRouter;
         WDARC = _WDARC;
         USDC = _USDC;
@@ -45,7 +44,7 @@ contract SwapHandler is Ownable {
         
         ISwapRouter.ExactInputParams memory params =
             ISwapRouter.ExactInputParams({
-                path: abi.encodePacked(address(WDARC), poolFee, USDC, poolFee, address(WETH9)),
+                path: abi.encodePacked(address(WDARC), poolFee, USDC, poolFee, address(WETH)),
                 recipient: address(this),
                 deadline: block.timestamp,
                 amountIn: amountIn,
@@ -54,19 +53,17 @@ contract SwapHandler is Ownable {
         // swap from DARC -> WETH
         amountOut = swapRouter.exactInput(params);
         // unwrap WETH 
-        WETH9.withdraw(amountOut);
+        WETH.withdraw(amountOut);
         // send ETH
         payable(msg.sender).transfer(amountOut);
-        //== WETH9.transfer(msg.sender, amountOut);
     }
 
     function swapETHtoDARC() public payable returns (uint256 amountOut) {
-        WETH9.deposit{value: msg.value}();
-        WETH9.approve(address(swapRouter), msg.value);
-        // TransferHelper.safeApprove(address(WETH9), 
+        WETH.deposit{value: msg.value}();
+        WETH.approve(address(swapRouter), msg.value);
         ISwapRouter.ExactInputParams memory params =
             ISwapRouter.ExactInputParams({
-                path: abi.encodePacked(address(WETH9), poolFee, USDC, poolFee, address(WDARC)),
+                path: abi.encodePacked(address(WETH), poolFee, USDC, poolFee, address(WDARC)),
                 recipient: address(this),
                 deadline: block.timestamp,
                 amountIn: msg.value,
@@ -119,5 +116,4 @@ contract SwapHandler is Ownable {
         amountOut = swapRouter.exactInput(params);
         WDARC.burn(amountOut);
     }
-
 }
